@@ -1,0 +1,48 @@
+upstream nginx_app_upstream {
+  {% for port in nginx_app_ports %}
+  server localhost:{{ port }};
+  {% endfor %}
+}
+
+server {
+  listen 80;
+  server_name {{nginx_app_name}};
+
+  gzip on;
+  gzip_proxied any;
+  gzip_min_length   280;
+  gzip_types        text/plain application/json text/css application/x-javascript text/xml application/xml application/xml+rss text/javascript image/x-icon image/bmp image/svg+xml;
+  gzip_vary         on;
+
+  location / {
+     # increase max request size and request timeout, typically needed for file uploads
+     client_max_body_size 20m;
+     client_body_timeout  300s;
+     proxy_set_header Host $host;
+     proxy_pass http://nginx_provider_web_upstream;
+  }
+
+  #If ssl is enabled -> Rewrite all none ssl requests to ssl.
+  #return 301 https://$host$request_uri$is_args$args;
+}
+
+server {
+  listen 443;
+  server_name {{nginx_app_name}};
+  ssl on;
+  ssl_certificate /etc/nginx/ssl/app.crt;
+  ssl_certificate_key /etc/nginx/ssl/app.key;
+
+  gzip on;
+  gzip_proxied any;
+  gzip_min_length   280;
+  gzip_types        text/plain application/json text/css application/x-javascript text/xml application/xml application/xml+rss text/javascript image/x-icon image/bmp image/svg+xml;
+  gzip_vary         on;
+
+  location / {
+     client_max_body_size 20m;
+     client_body_timeout  300s;
+     proxy_set_header Host $host;
+     proxy_pass http://nginx_provider_web_upstream;
+  }
+}

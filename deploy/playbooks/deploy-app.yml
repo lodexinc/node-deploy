@@ -1,0 +1,27 @@
+---
+- name: Deploy api
+  hosts: app
+  vars_files:
+    - ["vars/{{ env }}.yml"]
+    - vars/credentials.yml
+  tasks:
+    - name: Deploying docker instance
+      debug: var=docker_tag
+
+    - name: run app using docker
+      docker:
+        pull: always
+        name: "app-{{item}}"
+        image: anorsich/deploy-node:{{docker_tag}}
+        state: reloaded
+        username: "{{ docker_hub_user }}"
+        email: "{{ docker_hub_email }}"
+        password: "{{ docker_hub_pass }}"
+        restart_policy: on-failure
+        restart_policy_retry: 1000
+        docker_api_version: 1.18
+        ports:
+          - "{{item}}:3001"
+        env:
+           NODE_ENV: "{{env}}"
+      with_items: nginx_app_ports

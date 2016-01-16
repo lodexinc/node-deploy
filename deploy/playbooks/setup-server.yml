@@ -1,0 +1,65 @@
+---
+- name: Setup a server
+  hosts: app
+  vars_files:
+    - ["vars/{{ env }}.yml"]
+  roles:
+      - common
+      - nginx
+      - angstwad.docker_ubuntu
+  tasks:
+    - name: Assures /etc/nginx/ssl exists
+      file: path=/etc/nginx/ssl state=directory
+
+    - name: Copy ssl certiicate to /etc/nginx/ssl
+      copy: src={{ inventory_dir }}/../playbooks/files/{{item.src}} dest={{item.dest}} owner=root mode=744
+      with_items:
+        - {src: '{{app_name}}.crt', dest: '/etc/nginx/ssl/{{app_name}}.crt'}
+        - {src: '{{app_name}}.key', dest: '/etc/nginx/ssl/{{app_name}}.key'}
+
+    - name: restart nginx
+      sudo: yes
+      service: name=nginx state=restarted
+
+    - name: copy nginx virtual host file
+      sudo: yes
+      template: src="{{ inventory_dir }}/templates/nginx-config.j2"
+                dest="/etc/nginx/sites-available/{{app_name}}"
+                owner=root
+                group=root
+      tags:
+        - nginx
+
+    - name: link nginx virtual host file
+      sudo: yes
+      file: src="/etc/nginx/sites-available/{{app_name}}"
+            dest="/etc/nginx/sites-enabled/{{app_name}}"
+            state=link
+      tags:
+        - nginx
+
+    - name: restart nginx
+      sudo: yes
+      service: name=nginx state=restarted
+      tags:
+        - nginx
+
+    # Sample mongo deployment:
+    #
+    # - name: Assures /mongo/data exists
+    #   file: path=/mongo/data state=directory
+    #
+    # - name: run mongo using docker
+    #   docker:
+    #     name: mongo
+    #     image: mongo:2.6
+    #     state: started
+    #     restart_policy: always
+    #     restart_policy_retry: 1000
+    #     docker_api_version: 1.18
+    #     volumes:
+    #       - /mongo/data:/data/db
+    #     ports:
+    #       - "27017:27017"
+    #   tags:
+    #     - mongo

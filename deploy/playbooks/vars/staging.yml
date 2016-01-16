@@ -1,0 +1,5 @@
+app_name: app
+#---------------Load balancer-----------------#
+nginx_app_ports: [7000]
+#ip can can be replaced with domain name
+nginx_app_name: "46.101.144.64"

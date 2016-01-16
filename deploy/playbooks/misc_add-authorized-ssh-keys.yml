@@ -1,0 +1,10 @@
+---
+- name: Add ssh keys to all digital ocean servers
+  hosts: all
+  tasks:
+     - name: Adds public keys that are located in deploy/authorized_ssh_keys to ~/.ssh/authorized_keys on server.
+       authorized_key: user=root
+                       key="{{ lookup('file', item) }}"
+                       state=present
+       with_fileglob:
+          - ../authorized_ssh_keys/*.pub
