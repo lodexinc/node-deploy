@@ -12,7 +12,7 @@
       docker:
         pull: always
         name: "app-{{item}}"
-        image: anorsich/deploy-node:{{docker_tag}}
+        image: anorsich/node-deploy:{{docker_tag}}
         state: reloaded
         username: "{{ docker_hub_user }}"
         email: "{{ docker_hub_email }}"

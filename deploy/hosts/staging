@@ -1,1 +1,1 @@
-app ansible_ssh_host=46.101.144.64
+app ansible_ssh_host=46.101.144.64 ansible_ssh_user=root
